@@ -72,7 +72,7 @@ st.markdown("""
 @st.cache_resource
 def load_malaria_model():
     try:
-        model = load_model("/home/alain/lucana_malaria/new_model_new_update.hdf5", compile=False)
+        model = load_model("new_model_new_update.hdf5", compile=False)
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         return model
     except Exception as e:
