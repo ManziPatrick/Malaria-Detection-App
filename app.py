@@ -71,16 +71,39 @@ st.markdown("""
 # Load the model
 @st.cache_resource
 def load_malaria_model():
-    return load_model("malaria_classification_model.h5")
+    try:
+        model = load_model("/home/alain/lucana_malaria/new_model_new_update.hdf5", compile=False)
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        return model
+    except Exception as e:
+        st.error(f"Error loading the model: {str(e)}")
+        st.error(f"TensorFlow version: {tf.__version__}")
+        st.error(f"Keras version: {tf.keras.__version__}")
+        return None
 
 model = load_malaria_model()
 
-def preprocess_image(img):
-    img = img.resize((224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    return img_array / 255.0
 
+from tensorflow.keras.utils import img_to_array  # Changed import
+import numpy as np
+from PIL import Image
+
+def preprocess_image(input_image):  # Changed parameter name to avoid confusion
+    # Ensure input is a PIL Image
+    if not isinstance(input_image, Image.Image):
+        input_image = Image.fromarray(input_image)
+    
+    # Resize image
+    resized_img = input_image.resize((224, 224))
+    
+    # Convert PIL Image to numpy array
+    img_array = img_to_array(resized_img)  # Using img_to_array directly
+    
+    # Add batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Normalize pixel values
+    return img_array / 255.0
 # Main app
 st.markdown('<h1 class="big-font">Malaria Cell Detection</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Upload an image of a cell to detect if it\'s infected with malaria.</p>', unsafe_allow_html=True)
@@ -99,26 +122,28 @@ with col1:
         st.image(image, caption='Uploaded Image', use_column_width=True)
 
 with col2:
-    if uploaded_file is not None:
+  if uploaded_file is not None:
         
-        if st.button('Analyze Image'):
-            # Show spinner while processing
-            with st.spinner('Analyzing image...'):
-                
-                processed_image = preprocess_image(image)
-                prediction = model.predict(processed_image)
-                time.sleep(2)  
-            
-            st.markdown('<p class="result">Result:</p>', unsafe_allow_html=True)
-            if prediction[0][0] > 0.5:
-                st.error(f"The cell is likely infected with malaria. (Confidence: {prediction[0][0]:.2f})")
-            else:
-                st.success(f"The cell is likely uninfected. (Confidence: {1-prediction[0][0]:.2f})")
+    if st.button('Analyze Image'):
+        # Show spinner while processing
+        with st.spinner('Analyzing image...'):
+            processed_image = preprocess_image(image)
+            prediction = model.predict(processed_image)
+            time.sleep(2)  # Simulate delay for processing
+        
+        st.markdown('<p class="result">Result:</p>', unsafe_allow_html=True)
+        
+        # Adjusted the logic to show correct confidence for both cases
+        if prediction[0][0] < 0.5:
+            st.error(f"The cell is likely infected with malaria. (Confidence: {prediction[0][0]:.4f})")
+        else:
+            st.success(f"The cell is likely uninfected. (Confidence: {prediction[0][0]:.4f})")
 
-            # Add some information about the prediction
-            st.info("Note: This prediction is based on the model's analysis. For accurate medical diagnosis, please consult with a healthcare professional.")
+        # Add additional information about the prediction
+        st.info("Note: This prediction is based on the model's analysis. For accurate medical diagnosis, please consult with a healthcare professional.")
     else:
         st.markdown('<p class="subtitle">Upload an image to start the analysis.</p>', unsafe_allow_html=True)
+
 
 # Sidebar
 st.sidebar.image("https://www.cdc.gov/dpdx/malaria/images/1/Pfalciparum_microscope.jpg", use_column_width=True)
