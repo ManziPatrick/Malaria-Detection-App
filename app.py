@@ -65,6 +65,10 @@ st.markdown("""
     .sidebar .sidebar-content {
         background-color: #f1f8fe;
     }
+    .sidebar .img{
+            width:64px;
+            witdth:64px;
+            }
 </style>
 """, unsafe_allow_html=True)
 
@@ -146,7 +150,7 @@ with col2:
 
 
 # Sidebar
-st.sidebar.image("https://www.cdc.gov/dpdx/malaria/images/1/Pfalciparum_microscope.jpg", use_column_width=True)
+st.sidebar.image("https://www.manomedical.com/medias/product/big/6635/b01-microscope.png", use_column_width=True)
 st.sidebar.title("About")
 st.sidebar.info("This app uses a deep learning model to detect malaria-infected cells from cell images. Upload an image to get started.")
 
